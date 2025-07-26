@@ -16393,7 +16393,7 @@ class MPLobbyLayer : cocos2d::CCLayer, GJMPDelegate, UploadPopupDelegate, Upload
     void onComment(cocos2d::CCObject* sender);
     void onUpdateLobby();
     void postComment();
-    void tryExitLobby() = m1 0x3eee3c;
+    void tryExitLobby() = m1 0x3eee3c, imac 0x480eb0;
     void updateLobby(float);
 
     int m_lobbyID;
@@ -16513,19 +16513,19 @@ class MusicBrowser : FLAlertLayer, MusicDownloadDelegate, TableViewCellDelegate,
 
     bool init(int, GJSongType) = win 0x3239f0, imac 0x5f6470, m1 0x525924;
     void onArtistFilters(cocos2d::CCObject* sender) = win 0x325b10, imac 0x5f73a0, m1 0x5267d8;
-    void onClearSearch(cocos2d::CCObject* sender) = imac 0x5f72e0;
+    void onClearSearch(cocos2d::CCObject* sender) = m1 0x52671c, imac 0x5f72e0;
     void onClose(cocos2d::CCObject* sender) = win 0x325c00;
     void onPage(cocos2d::CCObject* sender) = win 0x325790, imac 0x5f70b0, m1 0x526478;
     void onPlaybackControl(cocos2d::CCObject* sender) = win 0x324b90, imac 0x5f7860, m1 0x526c88;
     void onSearch(cocos2d::CCObject* sender) = win 0x3258b0, imac 0x5f71b0, m1 0x52657c;
     void onTagFilters(cocos2d::CCObject* sender) = win 0x325aa0, imac 0x5f7340, m1 0x526770;
-    void onUpdateLibrary(cocos2d::CCObject* sender) = m1 0x526518;
+    void onUpdateLibrary(cocos2d::CCObject* sender) = m1 0x526518, imac 0x5f7140;
     void setupList(MusicSearchResult*) = win 0x325050, imac 0x5f7a00, m1 0x526e10;
-    TodoReturn setupMusicBrowser();
-    void setupSongControls() = win 0x3248b0, m1 0x52684c;
+    void setupMusicBrowser() = m1 0x526d3c, imac 0x5f7920;
+    void setupSongControls() = win 0x3248b0, m1 0x52684c, imac 0x5f7410;
     void sliderChanged(cocos2d::CCObject* sender);
-    void trySetupMusicBrowser() = m1 0x526d3c;
-    void updatePageLabel() = m1 0x5275cc;
+    void trySetupMusicBrowser() = m1 0x526ad8, imac 0x5f76a0;
+    void updatePageLabel() = m1 0x5275cc, imac 0x5f8280;
 
     GJSongType m_songType;
     MusicSearchResult* m_searchResult;
