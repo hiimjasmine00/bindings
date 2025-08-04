@@ -1,7 +1,7 @@
 #pragma once
 
 #include <array>
-#include <unordered_set>
+#include <unordered_map>
 #include <broma.hpp>
 #include <fmt/format.h>
 #include <fmt/ranges.h>
@@ -22,8 +22,8 @@ using namespace broma;
 #include <matjson.hpp>
 
 std::string generateAddressHeader(Root const& root);
-std::string generateModifyHeader(Root const& root, std::filesystem::path const& singleFolder, std::unordered_set<std::string>* generatedFiles = nullptr);
-std::string generateBindingHeader(Root const& root, std::filesystem::path const& singleFolder, std::unordered_set<std::string>* generatedFiles = nullptr);
+std::unordered_map<std::string, std::string> generateModifyHeader(Root const& root);
+std::unordered_map<std::string, std::string> generateBindingHeader(Root const& root);
 std::string generatePredeclareHeader(Root const& root);
 std::string generateBindingSource(Root const& root, bool skipPugixml);
 std::string generateTextInterface(Root const& root);

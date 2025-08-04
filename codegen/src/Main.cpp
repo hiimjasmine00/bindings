@@ -1,6 +1,7 @@
 #include "Shared.hpp"
 
 #include <filesystem>
+#include <fmt/std.h>
 
 using namespace codegen;
 
@@ -31,7 +32,7 @@ std::string generateMacFolderHeader(std::string folder, std::string filename) {
 #endif
 )GEN", folder, filename);
 }
-
+/*
 void generateFolderAlias(std::filesystem::path const& writeDir, std::string baseName, std::unordered_set<std::string> const& files) {
     auto outputDir = writeDir / baseName;
 
@@ -39,7 +40,7 @@ void generateFolderAlias(std::filesystem::path const& writeDir, std::string base
         writeFile(outputDir / filename, generateMacFolderHeader(baseName, filename));
     }
 }
-
+*/
 int main(int argc, char** argv) try {
     if (argc < 4) {
         throw codegen::error("Invalid number of parameters (expected 3 or more, found {})", argc - 1);
@@ -140,39 +141,114 @@ int main(int argc, char** argv) try {
         // on macos, build both platform headers together and then let the preprocessor handle the platform selection
         // this is easier. but not by a lot
 
-        std::unordered_set<std::string> generatedModify{};
-        std::unordered_set<std::string> generatedBindings{};
-
-        bool generatedSourceChanged = false;
-
         codegen::platform = Platform::MacArm;
-
-        writeFile(writeDir / "GeneratedModifyArm.hpp", generateModifyHeader(root, writeDir / "modify_arm", &generatedModify));
-        writeFile(writeDir / "GeneratedBindingArm.hpp", generateBindingHeader(root, writeDir / "binding_arm", &generatedBindings));
-        writeFile(writeDir / "GeneratedPredeclareArm.hpp", generatePredeclareHeader(root));
-        if (writeFile(writeDir / "GeneratedSourceArm.cpp", generateBindingSource(root, skipPugixml))) {
-            generatedSourceChanged = true;
-        }
-
-        writeFile(writeDir / "CodegenDataArm.txt", generateTextInterface(root));
-
+        auto modifyArm = generateModifyHeader(root);
         codegen::platform = Platform::MacIntel;
-
-        writeFile(writeDir / "GeneratedModifyIntel.hpp", generateModifyHeader(root, writeDir / "modify_intel", &generatedModify));
-        writeFile(writeDir / "GeneratedBindingIntel.hpp", generateBindingHeader(root, writeDir / "binding_intel", &generatedBindings));
-        writeFile(writeDir / "GeneratedPredeclareIntel.hpp", generatePredeclareHeader(root));
-        if (writeFile(writeDir / "GeneratedSourceIntel.cpp", generateBindingSource(root, skipPugixml))) {
-            generatedSourceChanged = true;
-        }
-
-        writeFile(writeDir / "CodegenDataIntel.txt", generateTextInterface(root));
-
+        auto modifyIntel = generateModifyHeader(root);
         codegen::platform = Platform::Mac;
 
-        writeFile(writeDir / "GeneratedModify.hpp", generateMacHeader("GeneratedModify", "hpp"));
-        writeFile(writeDir / "GeneratedBinding.hpp", generateMacHeader("GeneratedBinding", "hpp"));
-        writeFile(writeDir / "GeneratedPredeclare.hpp", generateMacHeader("GeneratedPredeclare", "hpp"));
-        writeFile(writeDir / "GeneratedSource.cpp", generateMacHeader("GeneratedSource", "cpp"));
+        std::string generatedModifyArm;
+        std::string generatedModifyIntel;
+        for (auto& [filename, single_output] : modifyArm) {
+            auto found = modifyIntel.find(filename);
+            if (found != modifyIntel.end() && found->second == single_output) {
+                writeFile(writeDir / "modify" / filename, single_output);
+                modifyIntel.erase(found);
+                auto modifyInclude = fmt::format("#include \"modify/{}\"\n", filename);
+                generatedModifyArm += modifyInclude;
+                generatedModifyIntel += modifyInclude;
+            } else {
+                writeFile(writeDir / "modify_arm" / filename, single_output);
+                generatedModifyArm += fmt::format("#include \"modify_arm/{}\"\n", filename);
+            }
+        }
+
+        for (auto& [filename, single_output] : modifyIntel) {
+            writeFile(writeDir / "modify_intel" / filename, single_output);
+            writeFile(writeDir / "modify" / filename, generateMacFolderHeader("modify", filename));
+            generatedModifyIntel += fmt::format("#include \"modify_intel/{}\"\n", filename);
+        }
+
+        if (generatedModifyArm == generatedModifyIntel) {
+            writeFile(writeDir / "GeneratedModify.hpp", generatedModifyArm);
+        }
+        else {
+            writeFile(writeDir / "GeneratedModifyArm.hpp", generatedModifyArm);
+            writeFile(writeDir / "GeneratedModifyIntel.hpp", generatedModifyIntel);
+            writeFile(writeDir / "GeneratedModify.hpp", generateMacHeader("GeneratedModify", "hpp"));
+        }
+
+        codegen::platform = Platform::MacArm;
+        auto bindingArm = generateBindingHeader(root);
+        codegen::platform = Platform::MacIntel;
+        auto bindingIntel = generateBindingHeader(root);
+        codegen::platform = Platform::Mac;
+
+        std::string generatedBindingArm;
+        std::string generatedBindingIntel;
+        for (auto& [filename, single_output] : bindingArm) {
+            auto found = bindingIntel.find(filename);
+            if (found != bindingIntel.end() && found->second == single_output) {
+                writeFile(writeDir / "binding" / filename, single_output);
+                bindingIntel.erase(found);
+                auto bindingInclude = fmt::format("#include \"binding/{}\"\n", filename);
+                generatedBindingArm += bindingInclude;
+                generatedBindingIntel += bindingInclude;
+            } else {
+                writeFile(writeDir / "binding_arm" / filename, single_output);
+                generatedBindingArm += fmt::format("#include \"binding_arm/{}\"\n", filename);
+            }
+        }
+
+        for (auto& [filename, single_output] : bindingIntel) {
+            writeFile(writeDir / "binding_intel" / filename, single_output);
+            writeFile(writeDir / "binding" / filename, generateMacFolderHeader("binding", filename));
+            generatedBindingIntel += fmt::format("#include \"binding_intel/{}\"\n", filename);
+        }
+
+        if (generatedBindingArm == generatedBindingIntel) {
+            writeFile(writeDir / "GeneratedBinding.hpp", generatedBindingArm);
+        }
+        else {
+            writeFile(writeDir / "GeneratedBindingArm.hpp", generatedBindingArm);
+            writeFile(writeDir / "GeneratedBindingIntel.hpp", generatedBindingIntel);
+            writeFile(writeDir / "GeneratedBinding.hpp", generateMacHeader("GeneratedBinding", "hpp"));
+        }
+
+        codegen::platform = Platform::MacArm;
+        auto generatedPredeclareArm = generatePredeclareHeader(root);
+        codegen::platform = Platform::MacIntel;
+        auto generatedPredeclareIntel = generatePredeclareHeader(root);
+        codegen::platform = Platform::Mac;
+
+        if (generatedPredeclareArm == generatedPredeclareIntel) {
+            writeFile(writeDir / "GeneratedPredeclare.hpp", generatedPredeclareArm);
+        }
+        else {
+            writeFile(writeDir / "GeneratedPredeclareArm.hpp", generatedPredeclareArm);
+            writeFile(writeDir / "GeneratedPredeclareIntel.hpp", generatedPredeclareIntel);
+            writeFile(writeDir / "GeneratedPredeclare.hpp", generateMacHeader("GeneratedPredeclare", "hpp"));
+        }
+
+        codegen::platform = Platform::MacArm;
+        auto generatedSourceArm = generateBindingSource(root, skipPugixml);
+        codegen::platform = Platform::MacIntel;
+        auto generatedSourceIntel = generateBindingSource(root, skipPugixml);
+        codegen::platform = Platform::Mac;
+
+        bool generatedSourceChanged = false;
+        if (generatedSourceArm == generatedSourceIntel) {
+            writeFile(writeDir / "GeneratedSource.cpp", generatedSourceArm);
+        }
+        else {
+            if (writeFile(writeDir / "GeneratedSourceArm.cpp", generatedSourceArm)) {
+                generatedSourceChanged = true;
+            }
+            if (writeFile(writeDir / "GeneratedSourceIntel.cpp", generatedSourceIntel)) {
+                generatedSourceChanged = true;
+            }
+            writeFile(writeDir / "GeneratedSource.cpp", generateMacHeader("GeneratedSource", "cpp"));
+        }
 
         auto now = std::chrono::file_clock::now();
         if (generatedSourceChanged) {
@@ -180,12 +256,27 @@ int main(int argc, char** argv) try {
             std::filesystem::last_write_time(writeDir / "GeneratedSource.cpp", now);
         }
 
-        generateFolderAlias(writeDir, "modify", generatedModify);
-        generateFolderAlias(writeDir, "binding", generatedBindings);
+        codegen::platform = Platform::MacArm;
+        writeFile(writeDir / "CodegenDataArm.txt", generateTextInterface(root));
+        codegen::platform = Platform::MacIntel;
+        writeFile(writeDir / "CodegenDataIntel.txt", generateTextInterface(root));
+        codegen::platform = Platform::Mac;
     } else {
         // writeFile(writeDir / "GeneratedAddress.cpp", generateAddressHeader(root));
-        writeFile(writeDir / "GeneratedModify.hpp", generateModifyHeader(root, writeDir / "modify"));
-        writeFile(writeDir / "GeneratedBinding.hpp", generateBindingHeader(root, writeDir / "binding"));
+        auto modifyMap = generateModifyHeader(root);
+        std::string generatedModify;
+        for (auto& [filename, single_output] : modifyMap) {
+            writeFile(writeDir / "modify" / filename, single_output);
+            generatedModify += fmt::format("#include \"modify/{}\"\n", filename);
+        }
+        writeFile(writeDir / "GeneratedModify.hpp", generatedModify);
+        auto bindingMap = generateBindingHeader(root);
+        std::string generatedBinding;
+        for (auto& [filename, single_output] : bindingMap) {
+            writeFile(writeDir / "binding" / filename, single_output);
+            generatedBinding += fmt::format("#include \"binding/{}\"\n", filename);
+        }
+        writeFile(writeDir / "GeneratedBinding.hpp", generatedBinding);
         writeFile(writeDir / "GeneratedPredeclare.hpp", generatePredeclareHeader(root));
         writeFile(writeDir / "GeneratedSource.cpp", generateBindingSource(root, skipPugixml));
         writeFile(writeDir / "CodegenData.txt", generateTextInterface(root));

@@ -1,6 +1,5 @@
 #include "Shared.hpp"
 
-#include <iostream>
 #include <set>
 
 namespace {
@@ -68,24 +67,15 @@ namespace geode::modifier {{
     }
 }
 
-std::string generateModifyHeader(Root const& root, std::filesystem::path const& singleFolder, std::unordered_set<std::string>* generatedFiles) {
-    std::string output;
-    std::string base_directory = singleFolder.filename().string();
+std::unordered_map<std::string, std::string> generateModifyHeader(Root const& root) {
+    std::unordered_map<std::string, std::string> generatedFiles;
 
     for (auto& c : root.classes) {        
         if (c.name == "cocos2d") continue;
 
         std::string filename = (codegen::getUnqualifiedClassName(c.name) + ".hpp");
-        output += fmt::format(
-            format_strings::modify_include,
-            fmt::arg("file_name", filename),
-            fmt::arg("base_directory", base_directory)
-        );
-        if (generatedFiles != nullptr) {
-            generatedFiles->insert(filename);
-        }
 
-        std::string single_output;
+        std::string& single_output = generatedFiles[filename];
 
         std::string class_include;
 
@@ -193,9 +183,7 @@ std::string generateModifyHeader(Root const& root, std::filesystem::path const& 
         }
 
         single_output += format_strings::modify_end;
-
-        writeFile(singleFolder / filename, single_output);
     }
 
-    return output;
+    return generatedFiles;
 }

@@ -1,6 +1,4 @@
 #include "Shared.hpp"
-#include <iostream>
-#include <set>
 
 namespace { namespace format_strings {
     // requires: base_classes, class_name
@@ -136,22 +134,13 @@ std::string generateDocs(std::string const& docs) {
     return ret;
 }
 
-std::string generateBindingHeader(Root const& root, std::filesystem::path const& singleFolder, std::unordered_set<std::string>* generatedFiles) {
-    std::string output;
-    std::string base_directory = singleFolder.filename().string();
+std::unordered_map<std::string, std::string> generateBindingHeader(Root const& root) {
+    std::unordered_map<std::string, std::string> generatedFiles;
 
     {
         std::string filename = "Standalones.hpp";
-        output += fmt::format(format_strings::binding_include,
-            fmt::arg("base_directory", base_directory),
-            fmt::arg("file_name", filename)
-        );
 
-        if (generatedFiles != nullptr) {
-            generatedFiles->insert(filename);
-        }
-
-        std::string single_output;
+        std::string& single_output = generatedFiles[filename];
         single_output += format_strings::class_includes;
 
         for (auto& f : root.functions) {
@@ -175,8 +164,6 @@ std::string generateBindingHeader(Root const& root, std::filesystem::path const&
             );
 
         }
-
-        writeFile(singleFolder / filename, single_output);
     }
 
         for (auto& cls : root.classes) {
@@ -184,16 +171,8 @@ std::string generateBindingHeader(Root const& root, std::filesystem::path const&
             continue;
 
         std::string filename = (codegen::getUnqualifiedClassName(cls.name) + ".hpp");
-        output += fmt::format(format_strings::binding_include,
-            fmt::arg("base_directory", base_directory),
-            fmt::arg("file_name", filename)
-        );
 
-        if (generatedFiles != nullptr) {
-            generatedFiles->insert(filename);
-        }
-
-        std::string single_output;
+        std::string& single_output = generatedFiles[filename];
         if (cls.name != "GDString") {
             single_output += format_strings::class_includes;
         } else {
@@ -302,9 +281,7 @@ std::string generateBindingHeader(Root const& root, std::filesystem::path const&
 
         // if (hasClass)
         single_output += ::format_strings::class_end;
-
-        writeFile(singleFolder / filename, single_output);
     }
 
-    return output;
+    return generatedFiles;
 }
