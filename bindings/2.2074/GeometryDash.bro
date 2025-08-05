@@ -5679,7 +5679,47 @@ class EndTriggerGameObject : EffectGameObject {
 [[link(android)]]
 class EnhancedGameObject : GameObject {
     // virtual ~EnhancedGameObject();
-    EnhancedGameObject() = win 0x188580;
+    EnhancedGameObject() = win 0x188580, ios 0x264720 {
+        m_poweredOn = false;
+        m_state = 0;
+        m_animationRandomizedStartValue = 0;
+        m_animationStart = 0.f;
+        m_unk540 = 0.f;
+        m_unk544 = 0.f;
+        m_unk548 = false;
+        m_randomFrameTime = 1.f;
+        m_visible = false;
+        m_shouldNotHideAnimFreeze = false;
+        m_usesSpecialAnimation = false;
+        m_frameTime = 1.f;
+        m_frames = 1;
+        m_hasCustomAnimation = false;
+        m_hasCustomRotation = false;
+        m_disableRotation = false;
+        m_rotationSpeed = 0.f;
+        m_rotationAngle = 0.f;
+        m_rotationDelta = 0.f;
+        m_rotationAnimationSpeed = 0.f;
+        m_animationRandomizedStart = false;
+        m_animationSpeed = 1.f;
+        m_animationShouldUseSpeed = false;
+        m_animateOnTrigger = false;
+        m_disableDelayedLoop = false;
+        m_disableAnimShine = false;
+        m_singleFrame = 0;
+        m_animationOffset = false;
+        m_animationTriggered = false;
+        m_unkAnimationInt = 0;
+        m_maybeAnimationVariableXInt = 0;
+        m_maybeAnimationVariableYInt = 0;
+        m_animateOnlyWhenActive = false;
+        m_isNoMultiActivate = false;
+        m_isMultiActivate = false;
+        m_activated = false;
+        m_activatedByPlayer1 = false;
+        m_activatedByPlayer2 = false;
+        m_hasUniqueCoin = false;
+    }
 
     static EnhancedGameObject* create(char const*);
 
