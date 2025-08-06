@@ -4824,7 +4824,7 @@ class EditorUI : cocos2d::CCLayer, FLAlertLayerProtocol, ColorSelectDelegate, GJ
     void addObjectsToSmartTemplate(GJSmartTemplate*, cocos2d::CCArray*) = win 0x114390;
     TodoReturn addSnapPosition(cocos2d::CCPoint);
     void alignObjects(cocos2d::CCArray* objects, bool axisY) = win 0x1203a0, m1 0x45afc, imac 0x4de50, ios 0x3efa20;
-    void applyOffset(GameObject*) = win 0x120d40;
+    void applyOffset(GameObject*) = win 0x120d40, ios 0x3e4a18;
     TodoReturn applySpecialOffset(cocos2d::CCPoint, GameObject*, cocos2d::CCPoint);
     TodoReturn arrayContainsClass(cocos2d::CCArray*, int);
     void assignNewGroups(bool groupY) = win 0x1178c0, m1 0x3f6a0, imac 0x45970, ios 0x3eb650;
@@ -4940,7 +4940,7 @@ class EditorUI : cocos2d::CCLayer, FLAlertLayerProtocol, ColorSelectDelegate, GJ
     }
     cocos2d::CCPoint getGroupCenter(cocos2d::CCArray* objs, bool) = win 0x121190, m1 0x36e28, imac 0x3c1b0, ios 0x3e5280;
     TodoReturn getGroupInfo(GameObject*, cocos2d::CCArray*, int&, int&, int&);
-    cocos2d::CCPoint getLimitedPosition(cocos2d::CCPoint) = win 0x11e6f0;
+    cocos2d::CCPoint getLimitedPosition(cocos2d::CCPoint) = win 0x11e6f0, ios 0x3ee478;
     CCMenuItemSpriteExtra* getModeBtn(char const*, int);
     cocos2d::CCNode* getNeighbor(int, cocos2d::CCPoint, GJSmartDirection, cocos2d::CCArray*) = win 0x116f30;
     TodoReturn getRandomStartKey(int);
@@ -5035,9 +5035,9 @@ class EditorUI : cocos2d::CCLayer, FLAlertLayerProtocol, ColorSelectDelegate, GJ
     void recreateButtonTabs();
     void redoLastAction(cocos2d::CCObject*) = win 0x110190, m1 0xdb14, imac 0xc740, ios 0x3bf964;
     void reloadCustomItems() = win 0xe35f0, m1 0x30fac, imac 0x318f0, ios 0x3e0d50;
-    void removeOffset(GameObject*) = win 0x120cb0;
+    void removeOffset(GameObject*) = win 0x120cb0, ios 0x3e4998;
     void replaceGroupID(GameObject*, int, int) = win 0x117680;
-    void repositionObjectsToCenter(cocos2d::CCArray*, cocos2d::CCPoint, bool) = win 0x112a20;
+    void repositionObjectsToCenter(cocos2d::CCArray*, cocos2d::CCPoint, bool) = win 0x112a20, ios 0x3e30e4;
     void resetObjectEditorValues(cocos2d::CCArray*);
     void resetSelectedObjectsColor() = win 0x11dd50, m1 0x43568, imac 0x4a720, ios 0x3edf7c;
     void resetUI() = ios 0x3dc538, win 0xe36d0, imac 0x2ac40, m1 0x2aeac;
@@ -5329,12 +5329,16 @@ class EffectGameObject : EnhancedGameObject {
     bool init(char const*) = win 0x48d1a0, m1 0x4ec0c4, imac 0x5b37d0, ios 0x261f48;
     void playTriggerEffect() = win 0x48d2b0;
     void resetSpawnTrigger();
-    void setTargetID(int) = m1 0x157c40, imac 0x192130;
-    void setTargetID2(int) = m1 0x157c58, imac 0x192150;
+    void setTargetID(int id) = win inline, m1 0x157c40, imac 0x192130, ios 0x3756ec {
+        m_targetGroupID = std::clamp(id, 0, 9999);
+    }
+    void setTargetID2(int id) = win inline, m1 0x157c58, imac 0x192150, ios 0x375704 {
+        m_centerGroupID = std::clamp(id, 0, 9999);
+    }
     void triggerEffectFinished() = win 0x48d780;
     void updateInteractiveHover(float) = win 0x48fe30;
     void updateSpecialColor() = win 0x48fdb0;
-    void updateSpeedModType() = win 0x493010;
+    void updateSpeedModType() = win 0x493010, ios 0x37f5ac;
 
     // this is probably pretty wrong :D
 
@@ -8014,7 +8018,7 @@ class GameObject : CCSpritePlus {
     bool dontCountTowardsLimit();
     void duplicateAttributes(GameObject*) = win 0x19ed00;
     void duplicateColorMode(GameObject*);
-    void duplicateValues(GameObject*) = win 0x19ee40;
+    void duplicateValues(GameObject*) = win 0x19ee40, ios 0x2610c4;
     cocos2d::ccColor3B editorColorForCustomMode(int);
     cocos2d::ccColor3B editorColorForMode(int) = win 0x19e0a0;
     void fastRotateObject(float);
@@ -8897,7 +8901,7 @@ class GameToolbox {
     static TodoReturn getInvertedEasing(int);
     static TodoReturn getLargestMergedIntDicts(cocos2d::CCDictionary*, cocos2d::CCDictionary*);
     static TodoReturn getMultipliedHSV(cocos2d::ccHSVValue const&, float);
-    static cocos2d::CCPoint getRelativeOffset(GameObject*, cocos2d::CCPoint) = win 0x64970, m1 0x43f1f4, imac 0x4dc100;
+    static cocos2d::CCPoint getRelativeOffset(GameObject*, cocos2d::CCPoint) = win 0x64970, m1 0x43f1f4, imac 0x4dc100, ios 0x47e70;
     static gd::string getResponse(cocos2d::extension::CCHttpResponse*) = win 0x64310, imac 0x4dba00, m1 0x43eb40;
     static gd::string getTimeString(int, bool) = win 0x65e20, imac 0x4de620, m1 0x44145c, ios 0x49338;
     static cocos2d::ccHSVValue hsvFromString(gd::string const& str, char const* delim) = win 0x654e0, m1 0x44007c, imac 0x4dd030, ios 0x487fc; // on windows, 2nd param is ignored and assumed to be "a"
@@ -15041,7 +15045,10 @@ class LevelEditorLayer : GJBaseGameLayer, LevelSettingsDelegate {
     void redoLastAction() = win inline {
         return this->handleAction(false, m_redoObjects);
     }
-    TodoReturn refreshSpecial(GameObject*);
+    void refreshSpecial(GameObject*) = win inline, m1 0xd01b8, imac 0xea7f0, ios 0x35de50 {
+        this->removeSpecial(p0);
+        this->addSpecial(p0);
+    }
     TodoReturn removeAllObjects();
     void removeAllObjectsOfType(int objectID) = win 0x2cdbb0, imac 0xe2db0, m1 0xc9e54, ios 0x35b3f0;
     void removeObject(GameObject*, bool) = win 0x2cda70, imac 0xe27e0, m1 0xc98e4, ios 0x35aedc;
