@@ -101,13 +101,6 @@ int main(int argc, char** argv) try {
         }
     }
 
-    if (codegen::platform == Platform::Mac) {
-        std::filesystem::create_directories(writeDir / "modify_intel");
-        std::filesystem::create_directories(writeDir / "binding_intel");
-        std::filesystem::create_directories(writeDir / "modify_arm");
-        std::filesystem::create_directories(writeDir / "binding_arm");
-    }
-
     std::filesystem::create_directories(writeDir / "modify");
     std::filesystem::create_directories(writeDir / "binding");
 
@@ -149,6 +142,7 @@ int main(int argc, char** argv) try {
 
         std::string generatedModifyArm;
         std::string generatedModifyIntel;
+        bool modifyDirectoriesCreated = false;
         for (auto& [filename, single_output] : modifyArm) {
             auto found = modifyIntel.find(filename);
             if (found != modifyIntel.end() && found->second == single_output) {
@@ -158,6 +152,11 @@ int main(int argc, char** argv) try {
                 generatedModifyArm += modifyInclude;
                 generatedModifyIntel += modifyInclude;
             } else {
+                if (!modifyDirectoriesCreated) {
+                    std::filesystem::create_directories(writeDir / "modify_arm");
+                    std::filesystem::create_directories(writeDir / "modify_intel");
+                    modifyDirectoriesCreated = true;
+                }
                 writeFile(writeDir / "modify_arm" / filename, single_output);
                 generatedModifyArm += fmt::format("#include \"modify_arm/{}\"\n", filename);
             }
@@ -186,6 +185,7 @@ int main(int argc, char** argv) try {
 
         std::string generatedBindingArm;
         std::string generatedBindingIntel;
+        bool bindingDirectoriesCreated = false;
         for (auto& [filename, single_output] : bindingArm) {
             auto found = bindingIntel.find(filename);
             if (found != bindingIntel.end() && found->second == single_output) {
@@ -195,6 +195,11 @@ int main(int argc, char** argv) try {
                 generatedBindingArm += bindingInclude;
                 generatedBindingIntel += bindingInclude;
             } else {
+                if (!bindingDirectoriesCreated) {
+                    std::filesystem::create_directories(writeDir / "binding_arm");
+                    std::filesystem::create_directories(writeDir / "binding_intel");
+                    bindingDirectoriesCreated = true;
+                }
                 writeFile(writeDir / "binding_arm" / filename, single_output);
                 generatedBindingArm += fmt::format("#include \"binding_arm/{}\"\n", filename);
             }
