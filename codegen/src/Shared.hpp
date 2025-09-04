@@ -1,7 +1,6 @@
 #pragma once
 
 #include <array>
-#include <unordered_set>
 #include <broma.hpp>
 #include <fmt/format.h>
 #include <fmt/ranges.h>
@@ -22,8 +21,8 @@ using namespace broma;
 #include <matjson.hpp>
 
 std::string generateAddressHeader(Root const& root);
-std::string generateModifyHeader(Root const& root, std::filesystem::path const& singleFolder, std::unordered_set<std::string>* generatedFiles = nullptr);
-std::string generateBindingHeader(Root const& root, std::filesystem::path const& singleFolder, std::unordered_set<std::string>* generatedFiles = nullptr);
+std::string generateModifyHeader(Root const& root, std::filesystem::path const& singleFolder);
+std::string generateBindingHeader(Root const& root, std::filesystem::path const& singleFolder);
 std::string generatePredeclareHeader(Root const& root);
 std::string generateBindingSource(Root const& root, bool skipPugixml);
 std::string generateTextInterface(Root const& root);
@@ -197,6 +196,27 @@ namespace codegen {
         }
     }
 
+    inline std::pair<ptrdiff_t, ptrdiff_t> platformNumbers(PlatformNumber const& pn) {
+        if (codegen::platform == Platform::Mac) {
+            return { pn.m1, pn.imac };
+        } else {
+            auto num = platformNumberWithPlatform(codegen::platform, pn);
+            return { num, num };
+        }
+    }
+
+    inline std::pair<ptrdiff_t, ptrdiff_t> platformNumbers(Field const& field) {
+        if (auto fn = field.get_as<FunctionBindField>()) {
+            if (codegen::platform == Platform::Mac) {
+                return { fn->binds.m1, fn->binds.imac };
+            } else {
+                auto num = platformNumberWithPlatform(codegen::platform, fn->binds);
+                return { num, num };
+            }
+        }
+        return { 0, 0 };
+    }
+
     inline ptrdiff_t platformNumber(PlatformNumber const& p) {
         return platformNumberWithPlatform(codegen::platform, p);
     }
@@ -241,11 +261,47 @@ namespace codegen {
     }
 
     inline BindStatus getStatus(FunctionBindField const& fn) {
-        return getStatusWithPlatform(codegen::platform, fn);
+        if (codegen::platform != Platform::Mac) {
+            return getStatusWithPlatform(codegen::platform, fn);
+        }
+
+        auto armStatus = getStatusWithPlatform(Platform::MacArm, fn);
+        auto intelStatus = getStatusWithPlatform(Platform::MacIntel, fn);
+        if (armStatus == intelStatus) {
+            return armStatus;
+        }
+        if (armStatus == BindStatus::NeedsBinding || intelStatus == BindStatus::NeedsBinding) {
+            return BindStatus::NeedsBinding;
+        }
+        if (armStatus != BindStatus::Missing && intelStatus == BindStatus::Missing) {
+            return armStatus;
+        }
+        else if (armStatus == BindStatus::Missing && intelStatus != BindStatus::Missing) {
+            return intelStatus;
+        }
+        return BindStatus::Unbindable;
     }
 
     inline BindStatus getStatus(Function const& f) {
-        return getStatusWithPlatform(codegen::platform, f);
+        if (codegen::platform != Platform::Mac) {
+            return getStatusWithPlatform(codegen::platform, f);
+        }
+
+        auto armStatus = getStatusWithPlatform(Platform::MacArm, f);
+        auto intelStatus = getStatusWithPlatform(Platform::MacIntel, f);
+        if (armStatus == intelStatus) {
+            return armStatus;
+        }
+        if (armStatus == BindStatus::NeedsBinding || intelStatus == BindStatus::NeedsBinding) {
+            return BindStatus::NeedsBinding;
+        }
+        if (armStatus != BindStatus::Missing && intelStatus == BindStatus::Missing) {
+            return armStatus;
+        }
+        else if (armStatus == BindStatus::Missing && intelStatus != BindStatus::Missing) {
+            return intelStatus;
+        }
+        return BindStatus::Unbindable;
     }
 
     inline std::string getParameters(FunctionProto const& f) { // int p0, float p1
@@ -345,7 +401,22 @@ namespace codegen {
             );
         }
         else if (codegen::getStatus(f) == BindStatus::NeedsBinding) {
-            return fmt::format("base::get() + 0x{:x}", codegen::platformNumber(f.binds));
+            if (codegen::platform == Platform::Mac) {
+                auto armNumber = f.binds.m1;
+                auto intelNumber = f.binds.imac;
+                if (armNumber >= 0 && intelNumber >= 0) {
+                    return fmt::format("base::get() + GEODE_ARM_MAC(0x{:x}) GEODE_INTEL_MAC(0x{:x})", armNumber, intelNumber);
+                }
+                else if (armNumber >= 0) {
+                    return fmt::format("base::get() + 0x{:x}", armNumber);
+                }
+                else if (intelNumber >= 0) {
+                    return fmt::format("base::get() + 0x{:x}", intelNumber);
+                }
+            }
+            else {
+                return fmt::format("base::get() + 0x{:x}", codegen::platformNumber(f.binds));
+            }
         }
         else {
             return "";
@@ -382,20 +453,35 @@ namespace codegen {
                     }
                 }
             }
-            else if (codegen::getStatus(*fn) == BindStatus::NeedsBinding || codegen::platformNumber(field) != -1) {
-                if (codegen::platform == Platform::Windows) {
-                    if (is_in_cocos_dll(field.parent)) {
-                        return fmt::format("base::getCocos() + 0x{:x}", codegen::platformNumber(fn->binds));
+            else if (codegen::getStatus(*fn) == BindStatus::NeedsBinding) {
+                if (codegen::platform == Platform::Mac) {
+                    auto armNumber = fn->binds.m1;
+                    auto intelNumber = fn->binds.imac;
+                    if (armNumber != -1 && intelNumber != -1) {
+                        return fmt::format("base::get() + GEODE_ARM_MAC(0x{:x}) GEODE_INTEL_MAC(0x{:x})", armNumber, intelNumber);
                     }
-                    else if (is_in_extensions_dll(field.parent)) {
-                        return fmt::format("base::getExtensions() + 0x{:x}", codegen::platformNumber(fn->binds));
+                    else if (armNumber != -1) {
+                        return fmt::format("base::get() + 0x{:x}", armNumber);
+                    }
+                    else if (intelNumber != -1) {
+                        return fmt::format("base::get() + 0x{:x}", intelNumber);
+                    }
+                }
+                else if (codegen::platformNumber(field) != -1) {
+                    if (codegen::platform == Platform::Windows) {
+                        if (is_in_cocos_dll(field.parent)) {
+                            return fmt::format("base::getCocos() + 0x{:x}", codegen::platformNumber(fn->binds));
+                        }
+                        else if (is_in_extensions_dll(field.parent)) {
+                            return fmt::format("base::getExtensions() + 0x{:x}", codegen::platformNumber(fn->binds));
+                        }
+                        else {
+                            return fmt::format("base::get() + 0x{:x}", codegen::platformNumber(fn->binds));
+                        }
                     }
                     else {
                         return fmt::format("base::get() + 0x{:x}", codegen::platformNumber(fn->binds));
                     }
-                }
-                else {
-                    return fmt::format("base::get() + 0x{:x}", codegen::platformNumber(fn->binds));
                 }
             }
             else if (codegen::getStatus(*fn) == BindStatus::Binded && fn->prototype.type == FunctionType::Normal) {

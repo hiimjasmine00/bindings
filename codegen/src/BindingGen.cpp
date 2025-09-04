@@ -1,6 +1,4 @@
 #include "Shared.hpp"
-#include <iostream>
-#include <set>
 
 namespace { namespace format_strings {
     // requires: base_classes, class_name
@@ -136,7 +134,7 @@ std::string generateDocs(std::string const& docs) {
     return ret;
 }
 
-std::string generateBindingHeader(Root const& root, std::filesystem::path const& singleFolder, std::unordered_set<std::string>* generatedFiles) {
+std::string generateBindingHeader(Root const& root, std::filesystem::path const& singleFolder) {
     std::string output;
     std::string base_directory = singleFolder.filename().string();
 
@@ -146,10 +144,6 @@ std::string generateBindingHeader(Root const& root, std::filesystem::path const&
             fmt::arg("base_directory", base_directory),
             fmt::arg("file_name", filename)
         );
-
-        if (generatedFiles != nullptr) {
-            generatedFiles->insert(filename);
-        }
 
         std::string single_output;
         single_output += format_strings::class_includes;
@@ -188,10 +182,6 @@ std::string generateBindingHeader(Root const& root, std::filesystem::path const&
             fmt::arg("base_directory", base_directory),
             fmt::arg("file_name", filename)
         );
-
-        if (generatedFiles != nullptr) {
-            generatedFiles->insert(filename);
-        }
 
         std::string single_output;
         if (cls.name != "GDString") {

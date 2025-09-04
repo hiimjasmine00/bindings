@@ -1,8 +1,5 @@
 #include "Shared.hpp"
 
-#include <iostream>
-#include <set>
-
 std::string generateTextInterface(Root const& root) {
     std::string output;
 

@@ -1,6 +1,4 @@
 #include "Shared.hpp"
-#include <iostream>
-#include <set>
 
 namespace { namespace format_strings {
 	constexpr char const* class_predeclare = "class {class_name};\n";

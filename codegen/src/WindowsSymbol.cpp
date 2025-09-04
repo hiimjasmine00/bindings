@@ -1,7 +1,6 @@
 #include "WindowsSymbol.hpp"
 #include "Shared.hpp"
 
-#include <unordered_set>
 #include <vector>
 
 std::string mangleWindowsIdent(std::string_view str) {

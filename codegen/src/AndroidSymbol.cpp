@@ -1,5 +1,4 @@
 #include "AndroidSymbol.hpp"
-#include <unordered_set>
 #include <vector>
 #include <string>
 #include <string_view>

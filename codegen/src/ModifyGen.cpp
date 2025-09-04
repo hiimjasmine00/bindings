@@ -1,6 +1,5 @@
 #include "Shared.hpp"
 
-#include <iostream>
 #include <set>
 
 namespace {
@@ -68,7 +67,7 @@ namespace geode::modifier {{
     }
 }
 
-std::string generateModifyHeader(Root const& root, std::filesystem::path const& singleFolder, std::unordered_set<std::string>* generatedFiles) {
+std::string generateModifyHeader(Root const& root, std::filesystem::path const& singleFolder) {
     std::string output;
     std::string base_directory = singleFolder.filename().string();
 
@@ -81,9 +80,6 @@ std::string generateModifyHeader(Root const& root, std::filesystem::path const& 
             fmt::arg("file_name", filename),
             fmt::arg("base_directory", base_directory)
         );
-        if (generatedFiles != nullptr) {
-            generatedFiles->insert(filename);
-        }
 
         std::string single_output;
 
