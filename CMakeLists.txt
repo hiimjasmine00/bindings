@@ -22,6 +22,12 @@ if (NOT GEODE_BINDINGS_PATH)
 	set(GEODE_BINDINGS_PATH ${CMAKE_CURRENT_SOURCE_DIR}/bindings/${GEODE_GD_VERSION})
 endif()
 
+if (NOT GEODE_CODEGEN_EXTRA_ARGS MATCHES "--skip-pugixml")
+	set(GEODE_USE_PUGIXML ON)
+else()
+	set(GEODE_USE_PUGIXML OFF)
+endif()
+
 set(GEODE_CODEGEN_BINARY_OUT ${CMAKE_CURRENT_BINARY_DIR}/codegen)
 set(GEODE_CODEGEN_PATH ${CMAKE_CURRENT_BINARY_DIR}/bindings)
 set(GEODE_CODEGEN_MAX_AGE 86400 CACHE STRING "Max age (in seconds) for the downloaded Codegen binary before redownloading")
@@ -174,6 +180,7 @@ add_custom_command(
 
 if (GEODE_IS_MEMBER_TEST)
 	set(GEODE_MEMBER_TEST_CODEGEN_PATH ${GEODE_CODEGEN_PATH} PARENT_SCOPE)
+	set(GEODE_MEMBER_TEST_USE_PUGIXML ${GEODE_USE_PUGIXML} PARENT_SCOPE)
 	return()
 endif()
 
@@ -185,6 +192,9 @@ endif()
 
 
 add_library(${PROJECT_NAME} ${GEODE_CODEGEN_PATH}/Geode/GeneratedSource.cpp)
+if (GEODE_USE_PUGIXML)
+	target_sources(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/external/pugixml.cpp)
+endif()
 target_include_directories(${PROJECT_NAME} ${GEODE_INCLUDE_SYSTEM_SPECIFIER} PUBLIC
 	${GEODE_CODEGEN_PATH}
 )

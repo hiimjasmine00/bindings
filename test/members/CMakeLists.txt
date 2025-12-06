@@ -125,6 +125,9 @@ if (WIN32)
 endif()
 
 target_sources(${PROJECT_NAME} PRIVATE ${GEODE_MEMBER_TEST_CODEGEN_PATH}/Geode/GeneratedSource.cpp)
+if (GEODE_MEMBER_TEST_USE_PUGIXML)
+	target_sources(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../external/pugixml.cpp)
+endif()
 target_compile_definitions(${PROJECT_NAME} PRIVATE GEODE_USE_NEW_DESTRUCTOR_LOCK=1)
 
 message(STATUS "Fetching Geode nightly Git hash")

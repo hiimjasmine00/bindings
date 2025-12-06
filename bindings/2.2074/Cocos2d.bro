@@ -5870,20 +5870,6 @@ class cocos2d::CCSpeed : cocos2d::CCAction {
     virtual cocos2d::CCActionInterval* reverse() = imac 0x5dd040, m1 0x50ff14;
 }
 
-[[link(win, android)]]
-class pugi::xml_document : pugi::xml_node {
-    xml_document() = imac 0x62aa40, m1 0x5553cc, ios 0x3a593c;
-    ~xml_document() = imac 0x62ab90, m1 0x555520, ios 0x3a5a20;
-}
-
-[[link(android)]]
-class pugi::xml_node {
-    // i'm not bothering
-    xml_node() = win inline, mac inline, ios inline {
-    	_root = nullptr;
-    }
-}
-
 [[link(android)]]
 class cocos2d::CCLightning : cocos2d::CCNode, cocos2d::CCRGBAProtocol {
     static cocos2d::CCLightning* lightningWithStrikePoint(cocos2d::CCPoint, cocos2d::CCPoint, float) = win 0x44540, imac 0x5c5940, m1 0x4fa830, ios 0x347118;
